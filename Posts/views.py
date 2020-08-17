@@ -12,17 +12,17 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PostSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
-        author_id = Token.objects.get(key=self.request.auth.key).user_id
-        serializer = self.serializer_class(data=request.data, context={'author_id': author_id})
-        if serializer.is_valid():
-            models.Post.objects.create(**serializer.validated_data)
-            return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.save(author=user)
 
-        return Response({
-            'status': 'Post was not created'
-        }, status=status.HTTP_400_BAD_REQUEST)
+    def destroy(self, request, *args, **kwargs):
+        post = self.get_object()
+        if getattr(self.request.user, 'id') == post.getAuthor():
+            self.perform_destroy(post)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response('You have no access for this action', status=status.HTTP_403_FORBIDDEN)
 
-    # def perform_create(self, serializer):
-    #     author_id = Token.objects.get(key=self.request.auth.key).user_id
-    #     serializer.save(User=author_id, status=Post.SENT)
+    def update(self, request, *args, **kwargs):
+        
