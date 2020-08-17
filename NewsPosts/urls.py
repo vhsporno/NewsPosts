@@ -16,11 +16,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import path, include
-from User import views
+from User import views as UserViews
 from rest_framework.authtoken.views import obtain_auth_token
+from Posts import views as PostViews
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'posts', PostViews.PostViewSet)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('user/hello', views.HelloView.as_view(), name='hello'),
+    path('user/hello', UserViews.HelloView.as_view(), name='hello'),
     path('user/api-token-auth', obtain_auth_token, name='api_token_auth'),
+    path('user/register', UserViews.RegisterUser.as_view(), name='register'),
+    path('', include(router.urls))
 ]
